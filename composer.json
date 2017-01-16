@@ -43,7 +43,7 @@
             "tests/UiTestCase.php",
             "tests/PluginTestCase.php"
         ]
-    },
+    },git st
     "scripts": {
         "post-create-project-cmd": [
             "php artisan key:generate"
