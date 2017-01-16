@@ -98,7 +98,7 @@ return [
     |
     */
 
-    'disableCoreUpdates' => false,
+    'disableCoreUpdates' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -278,7 +278,7 @@ return [
     |
     */
 
-    'linkPolicy' => 'detect',
+    'linkPolicy' => env('APP_LINKPOLICY','secure'),
 
     /*
     |--------------------------------------------------------------------------
