@@ -1,0 +1,6 @@
+plugin:
+    name: 'oca.listmanager::lang.plugin.name'
+    description: 'oca.listmanager::lang.plugin.description'
+    author: Oca
+    icon: oc-icon-list
+    homepage: ''

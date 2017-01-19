@@ -1,0 +1,4 @@
+fields:
+    profiles_verification_code:
+        label: Profiles Verification Code
+        description: If needed, this will be emailed to you (polson).   After its used this field will be cleared.

@@ -16,5 +16,12 @@ sftp-config.json
 selenium.php
 composer.lock
 
+#oca add
+**/vendor/*
+/.idea
+!/themes/*/assets/vendor/**/*
+!/themes/*/assets/*/vendor/**/*
+!.env.insecure.php
+
 # for netbeans
 nbproject

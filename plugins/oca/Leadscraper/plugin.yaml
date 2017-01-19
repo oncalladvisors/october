@@ -1,0 +1,6 @@
+plugin:
+    name: 'oca.leadscraper::lang.plugin.name'
+    description: 'oca.leadscraper::lang.plugin.description'
+    author: Oca
+    icon: oc-icon-scissors
+    homepage: ''

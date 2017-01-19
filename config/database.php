@@ -64,6 +64,18 @@ return [
             'prefix'    => '',
         ],
 
+        'mysql2' => [
+            'driver'    => 'mysql',
+            'host'      => env('MYSQL_HOST'),
+            'port'      => '',
+            'database'  => env('MYSQL_DBNAME2'),
+            'username'  => env('MYSQL_USER2'),
+            'password'  => env('MYSQL_PASSWORD2'),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => '',
+        ],
+
         'pgsql' => [
             'driver'   => 'pgsql',
             'host'     => 'localhost',
