@@ -1,5 +1,5 @@
 1.0.1:
     - 'Initialize plugin.'
 1.0.2:
-    - 'Created table oca_listmanager_list_original'
+    - 'Created tables oca_listmanager_list_original and oca_listmanager_list_datavalidation'
     - builder_table_create_oca_listmanager_list_original.php

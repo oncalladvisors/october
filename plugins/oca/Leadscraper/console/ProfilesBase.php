@@ -111,8 +111,7 @@ class ProfilesBase extends Command
     // make sure to check for duplicates before using this!
     public function saveRowInfo($mappedEntity){
         $mappedEntity['source'] = 'PR';
-        $entity = $this->listDb->table('originalLists')
-            ->insert($mappedEntity);
+        $entity = ListOriginal::create($mappedEntity);
         // no need to sleep if doing excel files.
         if(empty($this->excelFolder)){
             sleep ( rand ( 0, 2)); //@todo better place for this?
@@ -126,7 +125,7 @@ class ProfilesBase extends Command
      */
     public function checkEntityDuplicate ($currentEntity, $fieldToCheck = TRUE) {
         if($fieldToCheck){
-            $entity = $this->listDb->table('originalLists');
+            $entity = ListOriginal::query(); //http://laravel.io/forum/04-13-2015-combine-foreach-loop-and-eloquent-to-perform-a-search
             if(is_array($fieldToCheck)){
                 foreach($fieldToCheck as $field){
                     $entity->where($field, '=', $currentEntity[$field]); // untested
@@ -137,14 +136,13 @@ class ProfilesBase extends Command
                 }
             }
 
-            $entity = $entity->get();
+            $entity = $entity->get()->toArray();
         } else {
             // @todo check for duplicates based on non-entity specific things (entity changes and some entities don't have email1)
-            $entity = $this->listDb->table('originalLists')
-                ->where('year', '=', $currentEntity['year'])
+            $entity = ListOriginal::where('year', '=', $currentEntity['year'])
                 ->where('source', '=', "PR")
                 ->where('listServiceId', '=', $currentEntity['listServiceId']) // this is already mapped probably.
-                ->get();
+                ->get()->toArray();
         }
 
         if(!empty($entity)){

@@ -15,14 +15,15 @@ class ListOriginal extends Model
     public $rules = [
     ];
 
-    /*
-     * Disable timestamps by default.
-     * Remove this line if timestamps are defined in the database table.
-     */
-    public $timestamps = false;
-
     /**
      * @var string The database table used by the model.
      */
     public $table = 'oca_listmanager_list_original';
+
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = ['created_at'];
 }

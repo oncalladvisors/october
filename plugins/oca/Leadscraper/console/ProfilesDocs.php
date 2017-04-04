@@ -6,6 +6,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Oca\Leadscraper\Console\ProfilesBase;
 use Excel;
 use Storage;
+use Oca\ListManager\Models\ListOriginal;
 
 class ProfilesDocs extends ProfilesBase
 {
@@ -38,9 +39,18 @@ class ProfilesDocs extends ProfilesBase
     protected $newInPast; // used to store the option
 
     protected $profilesCount;
+    protected $currentSpecialtyOption;
     protected $numberOfCompleted = 0;
     protected $numberOfDup = 0;
     protected $everySpecialty = '11,25,31,42,50,52,59,65,71,79,85,86,88,104,114,121,130,140,144,146,151,156,191,167,172,173,174,179,180,182,186,189,195,202,206,207,210,226,236,237,244,251';
+
+
+
+    /*
+     * Example how to run this script with xdebug
+vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_CONFIG="idekey=PHPSTORM"  XDEBUG_CONFIG="idekey=PHPSTORM remote_host=10.0.2.2 remote_port=9000" php5 artisan leadscraper:profilesdocs 11,25,31,42,50,52,59,65,71,79,85,86,88,104,114,121,130,140,144,146,151,156,191,167,172,173,174,179,180,182,186,189,195,202,206,207,210,226,236,237,244,251 --scrapeLogId=01192017 --runByCode=1
+     */
+
 
     /**
      * Execute the console command.
@@ -50,8 +60,12 @@ class ProfilesDocs extends ProfilesBase
     {
         $this->setFireVars();
 
-        // @todo Create quality tests (firstname, email, other fields, residency/fellowship)
+//        $this->blankToNull();
+//        exit();
+
+        // @todo Create quality tests (incase the website changes and breaks stuff) (firstname, email, other fields, residency/fellowship)
         // @todo 7 day, 30 day, 60, 90,  etc...
+        // @todo specialty converter (long, short, specialist)
 
         $this->startPerson = $this->option('person');
         $this->excelFolder = $this->option('excelFolder');
@@ -196,7 +210,7 @@ class ProfilesDocs extends ProfilesBase
         // are their any results?
         $noresults = $this->crawler->filter('.main-content .span12 h3')->each(function ($node) {
             if(trim($node->text()) == 'Your search returned no results'){
-                $message = "No results for specialty: " . $this->startSpecialty;
+                $message = "No results for specialty: " . $this->currentSpecialtyOption;
                 $this->myConsoleLog('info',$message);
                 return true;
             }
@@ -465,10 +479,9 @@ class ProfilesDocs extends ProfilesBase
     }
 
     public function blankToNull(){
-        $entity = $this->listDb->table('originalLists')
-            ->where('year', '=', '2017')
-            ->where('source', '=', 'PR')
-            ->get();
+        // @todo fix this to work with models.
+        $entity = ListOriginal::All()
+            ->get()->toArray();
 
         foreach($entity as $key => $value){
             foreach ($value as $name => $data){
@@ -479,7 +492,7 @@ class ProfilesDocs extends ProfilesBase
             $toArray = (array)$entity[$key];
 //            $asdf['year'] = 2020;
 //            $this->listDb->table('originalLists')->insert($asdf);
-            $result = $this->listDb->table('originalLists')->where('id', '=', $entity[$key]->id)->update($toArray);
+            $result = ListOriginal::where('id', '=', $entity[$key]->id)->update($toArray);
         }
 
 
