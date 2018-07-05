@@ -14,6 +14,7 @@ class Plugin extends PluginBase
     public function register()
     {
         $this->registerConsoleCommand('leadscraper.profiledocs', 'Oca\Leadscraper\Console\ProfilesDocs');
+        $this->registerConsoleCommand('leadscraper.profilesweekly', 'Oca\Leadscraper\Console\ProfilesWeekly');
     }
 
     public function registerMailTemplates()

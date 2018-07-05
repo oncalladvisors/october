@@ -33,7 +33,7 @@ class ProfilesBase extends Command
     protected $SearchForm;
     protected $entity = array(); // the current scraped entities information
     protected $entityList = array();
-    protected $listYear = '2018';
+    protected $listYear = '2019';
 
     public $scrapeLog; // used to store the option
     public $scrapeLogId;
@@ -45,7 +45,7 @@ class ProfilesBase extends Command
 
     // these don't work in the constructor, so putting them here.
     public function setFireVars() {
-        $this->setListDb();
+        // look like old code $this->setListDb();
         $this->setScrapeLogfile($this->option('scrapeLogId'));
         $this->scrapeLogId = $this->option('scrapeLogId');
     }
