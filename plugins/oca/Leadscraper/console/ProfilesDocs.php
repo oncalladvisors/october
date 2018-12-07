@@ -208,7 +208,7 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
         $this->SearchDocs(isset($page['nextIndex']) ? $page['nextIndex'] : null);
 
         // are their any results?
-        $noresults = $this->crawler->filter('.main-content .span12 h3')->each(function ($node) {
+        $noresults = $this->crawler->filter('.main-content h3')->each(function ($node) {
             if(trim($node->text()) == 'Your search returned no results'){
                 $message = "No results for specialty: " . $this->currentSpecialtyOption;
                 $this->myConsoleLog('info',$message);
@@ -223,7 +223,7 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
 
         // get counts listed number of docs:
         $this->profilesCount = $this->getProfilesCount();
-        $countPerPage = $this->crawler->filter('tbody tr')->count();
+        $countPerPage = $this->crawler->filter('.d-table.search-results .d-table-row:not(.table-header)')->count();
 
         // if we have a page number, go to that page number, if not calculate # of pages
         if(isset($page['nextIndex'])){
@@ -233,11 +233,11 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
             $page['nextIndex'] = 2; // the next page will be the 2nd page.
         }
 
-        $message = "Showing $countPerPage results per page.";
+        $message = "Showing $countPerPage results per page for specialty: " . $this->currentSpecialtyOption;
         $this->myConsoleLog('info',$message);
 
         // grab the doctors information off the table row by row
-        $this->crawler->filter('tbody tr')->each(function ($node)
+        $this->crawler->filter('.d-table.search-results .d-table-row:not(.table-header)')->each(function ($node)
         {
             // @todo queue the per doc scraping
             $row = $this->getDocRow($node);
@@ -252,17 +252,17 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
     }
 
     private function getDocRow($nodeRow){
-        $yearid = $nodeRow->filter('td:nth-child(4)')->extract(array('onclick'));
+        $yearid = $nodeRow->filter('.details-name.d-table-cell')->extract(array('onclick'));
         $yearid = $this->getYearId($yearid[0]);
 
         // Set it all in a nice $doc array
         $row['year'] = $yearid['year'];
         $row['id'] = $yearid['id'];
-        $row['name'] = $this->getColumn($nodeRow, 'td:nth-child(4)');
+        $row['name'] = $this->getColumn($nodeRow, '.details-name.d-table-cell span');
         $splitname = explode(',', $row['name']);
         $row['firstname'] = trim($splitname[1]);
         $row['lastname'] = trim($splitname[0]);
-        $row['specialty'] = $this->getColumn($nodeRow, 'td:nth-child(5)');
+        $row['specialty'] = $this->getColumn($nodeRow, '.details-specialty.d-table-cell span');
 
         return $row;
     }
@@ -293,21 +293,9 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
 
     private function getDocInfo($dpc)
     {
-        // get info for doc
-        // The address will look something like: 448 E Ontario St, 302\r\n\t\t\t\t\tChicago, IL\r\n\t\t\t\t\t60611
-        $address = explode("\r\n",$this->getColumn($dpc, 'address'));
-        $city = array();
-        if(isset($address[1]))
-            $city = explode(',', $address[1]);
+        // get emails for doc
+        // this used to have addresss as well, but that has moved to "otherColumns"
 
-        $stateZip = '';
-        if (isset($city[1]))
-            $stateZip = preg_split("/\s+/", trim($city[1]));
-
-        $this->entity['address'] = isset($address[0]) ? trim($address[0]) : $this->getColumn($dpc, 'address');
-        $this->entity['city'] = isset($city[0]) ? trim($city[0]) : '';
-        $this->entity['state'] = isset($stateZip[0]) ? trim($stateZip[0]) : '';
-        $this->entity['zip'] = isset($stateZip[1]) ? trim($stateZip[1]) : '';
         $this->entity['email1'] = $this->getColumn($dpc, '#PhysEmail1');
         $this->entity['email2'] = $this->getColumn($dpc, '#PhysEmail2');
     }
@@ -334,10 +322,33 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
                 if($info['name'] == "Hometown" && isset($newValues['Hometown']) ){
                     $info['name'] = "Spouse Hometown";
                 }
+                if($info['name'] == "Mailing Address"){
+                    $info['name'] = "address";
+
+                    // The address may look something like: 448 E Ontario St, 302\r\n\t\t\t\t\tChicago, IL\r\n\t\t\t\t\t60611
+                    $address = explode("\r\n",$info['value']);
+                    $city = array();
+                    if(isset($address[1]))
+                        $city = explode(',', $address[1]);
+
+                    $stateZip = '';
+                    if (isset($city[1]))
+                        $stateZip = preg_split("/\s+/", trim($city[1]));
+
+                    //set address differently than other "other" items, separate them and set directly.
+                    $this->entity['address'] = isset($address[0]) ? trim($address[0]) : $info['value'];
+                    $this->entity['city'] = isset($city[0]) ? trim($city[0]) : '';
+                    $this->entity['state'] = isset($stateZip[0]) ? trim($stateZip[0]) : '';
+                    $this->entity['zip'] = isset($stateZip[1]) ? trim($stateZip[1]) : '';
+
+                    continue; // i'm storing address differently so no need to run the rest if this loop.
+                }
+
                 $newValues[$info['name']] = $info['value'];
             }
 
             // I do it this way so I fill my array in order
+            // @todo.  I don't think this is needed if using a db (rather than excel file)
             foreach ($this->getHtmlColumns() as $column){
                 if(isset($newValues[$column])){
                     // it could have been set previously... if not, set it.
@@ -360,12 +371,19 @@ vagrant@scotchbox:/var/www/october$ PHP_IDE_CONFIG="serverName=vagrant" XDEBUG_C
 
     private function getEduColumns($crawler)
     {
+        /*
+         * this will grab everything in the "table" and put it in an array like:
+         * ['Medical School'=>'New York Presbyterian Hospital Program','Residency'=>'Jackson Memorial Hospital/Jackson Health System Program']
+         *
+         * if multiple residencies/fellowships, just keeps the last one.
+         *
+         * Only stores fellowships and residencies in the "entity"
+         */
         $edu = array();
-        $edu = $crawler->filter('.physicianItem tbody tr')->each(function ($node) {
-            $training = $node->filter('td');
-//            if( $training->count() && (trim($training->text()) == "Residency" || trim($training->text()) == "Fellowship") ){
-            $name = trim($training->text());
-            $school = $training->nextAll()->eq(1)->text();
+        $edu = $crawler->filter('.physicianItem .education-table .d-table-row:not(.table-header)')->each(function ($node) {
+            $training = $node->filter('.d-table-cell');
+            $name = trim($training->first()->text());
+            $school = $training->nextAll()->nextAll()->text();
             return array('name' => $name, 'program' => trim($school));
         });
 

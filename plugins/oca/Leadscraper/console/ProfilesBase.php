@@ -66,6 +66,7 @@ class ProfilesBase extends Command
 
         // submit the login form
         $this->crawler = $this->client->submit($form, array('UserName' => env('PROFILES_USER'), 'Password'=> env('PROFILES_PASSWORD')));
+        $html = $this->crawler->html();
 
         // check if we are actually logged in.
         $this->crawler->filter('h3')->each(function ($node) {
@@ -78,7 +79,7 @@ class ProfilesBase extends Command
         $html = $this->crawler->html(); // for debug
 
         // we need to verify the browser
-        $this->crawler->filter('.page-header h2')->each(function ($node) {
+        $this->crawler->filter('.page-header h3')->each(function ($node) {
             if($node->text() == 'Profiles Browser Authentication'){
                 $message = "Logged in, but need browser verification!";
                 $this->myConsoleLog('info',$message);
@@ -257,8 +258,8 @@ class ProfilesBase extends Command
         // get profiles listed number of docs:
         $profilesCount = 0;
 
-        if ($this->crawler->filter('.pull-left strong')->count())
-            $profilesCount = (int) $this->crawler->filter('.pull-left strong')->text();
+        if ($this->crawler->filter('div.d-flex.justify-content-between strong')->count())
+            $profilesCount = (int) $this->crawler->filter('div.d-flex.justify-content-between strong')->text();
 
         return $profilesCount;
     }
